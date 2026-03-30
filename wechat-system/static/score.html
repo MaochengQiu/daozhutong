@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成绩查询</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 560px; }
+    .field { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 6px; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 10px 14px; cursor: pointer; }
+    #result { margin-top: 16px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>成绩查询</h2>
+  <div class="field">
+    <label for="studentId">学号</label>
+    <input id="studentId" maxlength="32" />
+  </div>
+  <div class="field">
+    <label for="name">姓名</label>
+    <input id="name" maxlength="64" />
+  </div>
+  <button id="queryBtn">查询成绩</button>
+  <div id="result"></div>
+
+  <script>
+    const resultEl = document.getElementById("result");
+    document.getElementById("queryBtn").addEventListener("click", async () => {
+      const studentId = document.getElementById("studentId").value.trim();
+      const name = document.getElementById("name").value.trim();
+      if (!studentId || !name) {
+        resultEl.textContent = "请输入学号和姓名";
+        return;
+      }
+      resultEl.textContent = "查询中...";
+      try {
+        const resp = await fetch("/api/score/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student_id: studentId, name: name }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          resultEl.textContent = data.detail || "请求失败";
+          return;
+        }
+        if (!data.ok) {
+          resultEl.textContent = data.message || "未查询到成绩";
+          return;
+        }
+        resultEl.textContent = data.data.map(item => `${item.course}: ${item.score}`).join("\n");
+      } catch (err) {
+        resultEl.textContent = "查询失败，请稍后重试";
+      }
+    });
+  </script>
+</body>
+</html>
