@@ -4,16 +4,12 @@ import xml.etree.ElementTree as ET
 from fastapi import APIRouter, Request, Response
 
 from app.config import get_settings
-from app.qa import AIClient, DocProcessor, QAService, Retriever
+from app.qa import answer_question
 from app.wechat.reply import text_reply
 
 
 router = APIRouter()
 settings = get_settings()
-
-chunks = DocProcessor(settings.docs_path).load_chunks()
-retriever = Retriever(chunks)
-qa_service = QAService(chunks=chunks, retriever=retriever, ai_client=AIClient())
 
 
 def _verify_signature(signature: str, timestamp: str, nonce: str) -> bool:
@@ -35,18 +31,33 @@ async def receive_message(request: Request):
     if not raw:
         return Response("success", media_type="text/plain")
 
-    root = ET.fromstring(raw.decode("utf-8"))
+    try:
+        root = ET.fromstring(raw.decode("utf-8"))
+    except Exception:
+        return Response("invalid xml", status_code=400)
+
     msg_type = root.findtext("MsgType", default="")
     from_user = root.findtext("FromUserName", default="")
     to_user = root.findtext("ToUserName", default="")
     content = root.findtext("Content", default="").strip()
 
     if msg_type != "text":
-        return Response(content=text_reply(from_user, to_user, "暂仅支持文本消息。"), media_type="application/xml")
+        return Response(
+            content=text_reply(from_user, to_user, "目前仅支持处理文本消息。"),
+            media_type="application/xml"
+        )
 
+    # 1. 关键词触发：查成绩
     if settings.wechat_score_keyword in content:
         guide = f"请点击进入成绩查询页面：{settings.score_page_url}"
-        return Response(content=text_reply(from_user, to_user, guide), media_type="application/xml")
+        return Response(
+            content=text_reply(from_user, to_user, guide),
+            media_type="application/xml"
+        )
 
-    answer = qa_service.answer(content) if content else "暂无法解答"
-    return Response(content=text_reply(from_user, to_user, answer), media_type="application/xml")
+    # 2. 知识库/AI 问答
+    answer = await answer_question(content) if content else "你想问什么呢？"
+    return Response(
+        content=text_reply(from_user, to_user, answer),
+        media_type="application/xml"
+    )

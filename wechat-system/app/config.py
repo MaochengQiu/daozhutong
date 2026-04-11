@@ -26,14 +26,11 @@ class Settings(BaseSettings):
     ai_timeout_sec: int = 20
 
     docs_path: str = str(BASE_DIR / "docs" / "faq.txt")
-    qa_large_doc_threshold: int = 50
-    qa_top_k: int = 5
-    qa_relevance_threshold: float = 0.15
 
-    database_url: str = f"sqlite:///{(BASE_DIR / 'data.db').as_posix()}"
+    database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'app.db').as_posix()}"
     score_rate_limit_per_minute: int = 20
 
 
-@lru_cache
+@lru_cache()
 def get_settings() -> Settings:
     return Settings()

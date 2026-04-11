@@ -1,5 +1,3 @@
-from app.qa.ai_client import AIClient, QAService
-from app.qa.doc_processor import DocProcessor
-from app.qa.retriever import Retriever
+from app.qa.retriever import answer_question
 
-__all__ = ["AIClient", "QAService", "DocProcessor", "Retriever"]
+__all__ = ["answer_question"]
