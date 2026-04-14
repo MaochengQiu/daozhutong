@@ -108,6 +108,28 @@ API:
 POST /api/score/query
 ```
 
+### QA Chat Page
+
+Open:
+
+```text
+http://127.0.0.1:8000/static/chat.html
+```
+
+API:
+
+```text
+POST /api/qa/ask
+```
+
+### Home Page
+
+Open:
+
+```text
+http://127.0.0.1:8000/
+```
+
 ### WeChat Endpoint
 
 - Verification: `GET /wechat`

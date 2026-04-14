@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from app.config import BASE_DIR, get_settings
 from app.database import Base, engine
+from app.qa.router import router as qa_router
 from app.score.router import router as score_router
 from app.wechat.handler import router as wechat_router
 
@@ -21,6 +23,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(wechat_router, tags=["wechat"])
+    app.include_router(qa_router, tags=["qa"])
     app.include_router(score_router, tags=["score"])
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -31,6 +34,14 @@ def create_app() -> FastAPI:
     @app.get("/healthz")
     def health_check():
         return {"status": "ok"}
+
+    @app.get("/")
+    def home():
+        return RedirectResponse(url="/static/home.html")
+
+    @app.head("/")
+    def home_head():
+        return RedirectResponse(url="/static/home.html")
 
     return app
 
