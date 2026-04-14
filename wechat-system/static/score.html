@@ -5,56 +5,350 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>成绩查询</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; max-width: 560px; }
-    .field { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 6px; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { padding: 10px 14px; cursor: pointer; }
-    #result { margin-top: 16px; white-space: pre-wrap; }
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary2: #1d4ed8;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(17, 24, 39, 0.10);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(900px 450px at 20% 10%, rgba(37, 99, 235, 0.12), transparent 60%),
+        radial-gradient(900px 450px at 90% 20%, rgba(29, 78, 216, 0.10), transparent 55%),
+        var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+    }
+
+    .container { width: 100%; max-width: 560px; }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(229, 231, 235, 0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 18px;
+    }
+
+    header { margin-bottom: 16px; }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    form { margin-top: 14px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .field { display: grid; gap: 8px; }
+    label { font-size: 13px; color: var(--muted); }
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+      background: #fff;
+    }
+    input::placeholder { color: #9ca3af; }
+    input:focus {
+      border-color: rgba(37, 99, 235, 0.65);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+    input[aria-invalid="true"] {
+      border-color: rgba(220, 38, 38, 0.55);
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
+    }
+
+    .actions { margin-top: 14px; display: grid; gap: 10px; }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { cursor: not-allowed; filter: grayscale(25%) opacity(0.7); }
+
+    .hint { font-size: 12px; color: var(--muted); text-align: center; }
+    .field-error {
+      min-height: 16px;
+      font-size: 12px;
+      line-height: 1.2;
+      color: var(--danger);
+      visibility: hidden;
+    }
+    .field-error.show { visibility: visible; }
+    #result { margin-top: 18px; }
+    .status {
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fafafa;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .status.error {
+      border-color: rgba(220, 38, 38, 0.35);
+      background: rgba(220, 38, 38, 0.06);
+      color: var(--danger);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+    thead th {
+      text-align: left;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 10px 12px;
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    .score { font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+    .footer { margin-top: 14px; text-align: center; font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
-  <h2>成绩查询</h2>
-  <div class="field">
-    <label for="studentId">学号</label>
-    <input id="studentId" maxlength="32" />
+  <div class="container">
+    <div class="card">
+      <header>
+        <h1>成绩查询</h1>
+        <div class="subtitle">请输入姓名与学号后点击查询，系统将从后端数据库检索并返回你的课程成绩。</div>
+      </header>
+
+      <form id="queryForm" autocomplete="off">
+        <div class="grid">
+          <div class="field">
+            <label for="name">姓名</label>
+            <input id="name" maxlength="64" inputmode="text" placeholder="例如：张三" required />
+            <div id="nameError" class="field-error" role="alert">输入格式错误，请重新输入</div>
+          </div>
+          <div class="field">
+            <label for="studentId">学号</label>
+            <input id="studentId" maxlength="11" inputmode="numeric" pattern="[0-9]{11}" placeholder="例如：20260000001" required />
+            <div id="studentIdError" class="field-error" role="alert">输入格式错误，请重新输入</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="queryBtn" type="submit">查询</button>
+          <div class="hint">为保护服务稳定，频繁查询可能会被临时限制</div>
+        </div>
+      </form>
+
+      <div id="result" aria-live="polite"></div>
+      <div class="footer">如查询不到成绩，请核对姓名与学号是否一致</div>
+    </div>
   </div>
-  <div class="field">
-    <label for="name">姓名</label>
-    <input id="name" maxlength="64" />
-  </div>
-  <button id="queryBtn">查询成绩</button>
-  <div id="result"></div>
 
   <script>
+    const formEl = document.getElementById("queryForm");
+    const btnEl = document.getElementById("queryBtn");
     const resultEl = document.getElementById("result");
-    document.getElementById("queryBtn").addEventListener("click", async () => {
-      const studentId = document.getElementById("studentId").value.trim();
-      const name = document.getElementById("name").value.trim();
-      if (!studentId || !name) {
-        resultEl.textContent = "请输入学号和姓名";
+    const nameEl = document.getElementById("name");
+    const studentIdEl = document.getElementById("studentId");
+    const nameErrorEl = document.getElementById("nameError");
+    const studentIdErrorEl = document.getElementById("studentIdError");
+    const NAME_RE = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+$/;
+    const STUDENT_ID_RE = /^\d{11}$/;
+    let nameComposing = false;
+
+    function setStatus(message, type) {
+      if (!message) {
+        resultEl.innerHTML = "";
         return;
       }
-      resultEl.textContent = "查询中...";
+      const cls = type === "error" ? "status error" : "status";
+      resultEl.innerHTML = `<div class="${cls}">${escapeHtml(message)}</div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderTable(records) {
+      const rows = records
+        .map((r) => `<tr><td>${escapeHtml(r.course)}</td><td class="score">${escapeHtml(r.score)}</td></tr>`)
+        .join("");
+      resultEl.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>课程</th><th>成绩</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function setInvalid(el, invalid) {
+      el.setAttribute("aria-invalid", invalid ? "true" : "false");
+    }
+
+    function setFieldError(errorEl, show) {
+      errorEl.classList.toggle("show", !!show);
+    }
+
+    function sanitizeNameInput() {
+      const raw = nameEl.value;
+      const cleaned = raw.replace(/[^\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g, "");
+      if (raw !== cleaned) nameEl.value = cleaned;
+      const show = nameEl.value.length > 0 && !NAME_RE.test(nameEl.value);
+      setInvalid(nameEl, show);
+      setFieldError(nameErrorEl, show);
+    }
+
+    function sanitizeStudentIdInput() {
+      const raw = studentIdEl.value;
+      const cleaned = raw.replace(/\D/g, "").slice(0, 11);
+      if (raw !== cleaned) studentIdEl.value = cleaned;
+      const show = studentIdEl.value.length > 0 && !STUDENT_ID_RE.test(studentIdEl.value);
+      setInvalid(studentIdEl, show);
+      setFieldError(studentIdErrorEl, show);
+    }
+
+    function normalizeName(raw) {
+      return raw.trim();
+    }
+
+    function normalizeStudentId(raw) {
+      return raw.trim();
+    }
+
+    function validateInputs() {
+      const name = normalizeName(nameEl.value);
+      const studentId = normalizeStudentId(studentIdEl.value);
+      setInvalid(nameEl, false);
+      setInvalid(studentIdEl, false);
+      setFieldError(nameErrorEl, false);
+      setFieldError(studentIdErrorEl, false);
+
+      if (!name || !studentId) {
+        setStatus("请填写姓名与学号后再查询。", "error");
+        if (!name) {
+          setInvalid(nameEl, true);
+          setFieldError(nameErrorEl, true);
+        }
+        if (!studentId) {
+          setInvalid(studentIdEl, true);
+          setFieldError(studentIdErrorEl, true);
+        }
+        return null;
+      }
+      if (!NAME_RE.test(name)) {
+        setInvalid(nameEl, true);
+        setFieldError(nameErrorEl, true);
+        setStatus("输入格式错误，请重新输入", "error");
+        return null;
+      }
+      if (!STUDENT_ID_RE.test(studentId)) {
+        setInvalid(studentIdEl, true);
+        setFieldError(studentIdErrorEl, true);
+        setStatus("输入格式错误，请重新输入", "error");
+        return null;
+      }
+      return { name, studentId };
+    }
+
+    async function query() {
+      const payload = validateInputs();
+      if (!payload) {
+        return;
+      }
+      const { name, studentId } = payload;
+
+      btnEl.disabled = true;
+      setStatus("查询中…");
       try {
         const resp = await fetch("/api/score/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ student_id: studentId, name: name }),
+          body: JSON.stringify({ student_id: studentId, name }),
         });
-        const data = await resp.json();
+        const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
-          resultEl.textContent = data.detail || "请求失败";
+          setStatus(data.detail || "请求失败，请稍后重试。", "error");
           return;
         }
         if (!data.ok) {
-          resultEl.textContent = data.message || "未查询到成绩";
+          setStatus(data.message || "未查询到成绩。", "error");
           return;
         }
-        resultEl.textContent = data.data.map(item => `${item.course}: ${item.score}`).join("\n");
-      } catch (err) {
-        resultEl.textContent = "查询失败，请稍后重试";
+        if (!Array.isArray(data.data) || data.data.length === 0) {
+          setStatus("未查询到成绩。", "error");
+          return;
+        }
+        renderTable(data.data);
+      } catch (e) {
+        setStatus("网络异常或服务不可用，请稍后重试。", "error");
+      } finally {
+        btnEl.disabled = false;
       }
+    }
+
+    formEl.addEventListener("submit", (e) => {
+      e.preventDefault();
+      query();
+    });
+
+    nameEl.addEventListener("compositionstart", () => {
+      nameComposing = true;
+    });
+
+    nameEl.addEventListener("compositionend", () => {
+      nameComposing = false;
+      sanitizeNameInput();
+    });
+
+    nameEl.addEventListener("input", (e) => {
+      if (e.isComposing || nameComposing) return;
+      sanitizeNameInput();
+    });
+
+    studentIdEl.addEventListener("input", () => {
+      sanitizeStudentIdInput();
     });
   </script>
 </body>
