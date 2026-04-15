@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     score_page_url: str = "http://localhost:8000/static/score.html"
 
     ai_enabled: bool = True
-    ai_api_key: str = ""
+    ai_api_key: str = "sk-caed026245774ba390d1f738aad2e3c5"
     ai_api_base: str = "https://api.deepseek.com"
     ai_chat_model: str = "deepseek-chat"
     ai_timeout_sec: int = 20
