@@ -53,3 +53,38 @@ async def call_ai_api(question: str, context: str) -> str:
         return f"暂无法解答，网络错误: {str(e)}"
     except Exception as e:
         return f"暂无法解答，发生错误: {str(e)}"
+
+
+async def embed_texts(texts: List[str]) -> List[List[float]]:
+    settings = get_settings()
+    if not settings.ai_enabled or not settings.ai_api_key:
+        raise RuntimeError("AI 服务尚未配置")
+    if not texts:
+        return []
+
+    url = f"{settings.ai_api_base.rstrip('/')}/embeddings"
+    headers = {
+        "Authorization": f"Bearer {settings.ai_api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {"model": settings.ai_embedding_model, "input": texts}
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(url, headers=headers, json=payload, timeout=settings.ai_timeout_sec)
+        resp.raise_for_status()
+        data = resp.json()
+
+    items = data.get("data", [])
+    if not isinstance(items, list) or not items:
+        raise RuntimeError("Embedding 响应格式异常")
+
+    embeddings: List[List[float]] = []
+    for item in items:
+        emb = item.get("embedding")
+        if not isinstance(emb, list) or not emb:
+            raise RuntimeError("Embedding 响应格式异常")
+        embeddings.append(emb)
+
+    if len(embeddings) != len(texts):
+        raise RuntimeError("Embedding 返回数量与输入不一致")
+    return embeddings
