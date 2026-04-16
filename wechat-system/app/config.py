@@ -20,12 +20,22 @@ class Settings(BaseSettings):
     score_page_url: str = "http://localhost:8000/static/score.html"
 
     ai_enabled: bool = True
-    ai_api_key: str = "sk-caed026245774ba390d1f738aad2e3c5"
+    ai_api_key: str = ""
     ai_api_base: str = "https://api.deepseek.com"
     ai_chat_model: str = "deepseek-chat"
+    ai_embedding_model: str = "text-embedding-3-small"
     ai_timeout_sec: int = 20
 
     docs_path: str = str(BASE_DIR / "docs" / "faq.txt")
+
+    qa_vector_enabled: bool = True
+    qa_chunk_size: int = 500
+    qa_chunk_overlap: int = 100
+    qa_retrieval_top_k: int = 5
+
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
+    qdrant_collection: str = "wechat_qa_docs"
 
     database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'app.db').as_posix()}"
     score_rate_limit_per_minute: int = 20
