@@ -18,6 +18,7 @@ except Exception:
 _index_lock = asyncio.Lock()
 _index_ready = False
 _qdrant_client: Optional["QdrantClient"] = None
+_QA_FALLBACK = "暂无法回答，请直接询问老师"
 
 
 def _chunk_text(text: str, chunk_size: int, overlap: int) -> List[str]:
@@ -120,7 +121,7 @@ async def answer_question(question: str) -> str:
     settings = get_settings()
     documents = load_documents(settings.docs_path)
     if not documents:
-        return "暂无法解答，知识库尚未配置。"
+        return _QA_FALLBACK
 
     fallback_context = "\n\n".join([str(doc.get("content") or "") for doc in documents]).strip()
     if not settings.qa_vector_enabled:

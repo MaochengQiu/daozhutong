@@ -15,10 +15,10 @@ def init_db():
         if existing == 0:
             session.add_all(
                 [
-                    ScoreRecord(student_id="2026001", name="张三", course="数学", score=92),
-                    ScoreRecord(student_id="2026001", name="张三", course="英语", score=88),
-                    ScoreRecord(student_id="2026002", name="李四", course="数学", score=79),
-                    ScoreRecord(student_id="2026002", name="李四", course="英语", score=85),
+                    ScoreRecord(student_id="25000000001", name="张三", course="数学", score=92),
+                    ScoreRecord(student_id="25000000001", name="张三", course="英语", score=88),
+                    ScoreRecord(student_id="25000000002", name="李四", course="数学", score=79),
+                    ScoreRecord(student_id="25000000002", name="李四", course="英语", score=85),
                 ]
             )
             session.commit()

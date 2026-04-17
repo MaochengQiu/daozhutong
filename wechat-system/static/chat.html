@@ -219,7 +219,7 @@
             <div id="questionError" class="field-error" role="alert">输入格式错误，请重新输入</div>
           </div>
           <div class="actions">
-            <div class="hint">仅基于知识库回答；无法确定时会回复“暂无法解答”</div>
+            <div class="hint">仅基于知识库回答；无法确定时会回复“暂无法回答，请直接询问老师”</div>
             <button id="sendBtn" type="submit">发送</button>
           </div>
         </form>
@@ -238,7 +238,7 @@
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
+        .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
 
@@ -284,19 +284,19 @@
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
           pendingBubble.parentElement.className = "msg error";
-          pendingBubble.innerHTML = escapeHtml(data.detail || "请求失败，请稍后重试。");
+          pendingBubble.innerHTML = escapeHtml(data.detail || "暂无法回答，请直接询问老师");
           return;
         }
         if (!data.ok) {
           pendingBubble.parentElement.className = "msg error";
-          pendingBubble.innerHTML = escapeHtml(data.message || "暂无法解答。");
+          pendingBubble.innerHTML = escapeHtml(data.message || "暂无法回答，请直接询问老师");
           return;
         }
         pendingBubble.parentElement.className = "msg assistant";
-        pendingBubble.innerHTML = escapeHtml(data.answer || "暂无法解答。");
+        pendingBubble.innerHTML = escapeHtml(data.answer || "暂无法回答，请直接询问老师");
       } catch (e) {
         pendingBubble.parentElement.className = "msg error";
-        pendingBubble.innerHTML = escapeHtml("网络异常或服务不可用，请稍后重试。");
+        pendingBubble.innerHTML = escapeHtml("暂无法回答，请直接询问老师");
       } finally {
         sendBtn.disabled = false;
       }

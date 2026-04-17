@@ -3,13 +3,16 @@ import httpx
 from app.config import get_settings
 
 
+_QA_FALLBACK = "暂无法回答，请直接询问老师"
+
+
 async def call_ai_api(question: str, context: str) -> str:
     """
     调用 AI 接口进行问答。
     """
     settings = get_settings()
     if not settings.ai_enabled or not settings.ai_api_key:
-        return "暂无法解答，AI 服务尚未配置。"
+        return _QA_FALLBACK
 
     url = f"{settings.ai_api_base.rstrip('/')}/chat/completions"
     headers = {
@@ -44,21 +47,26 @@ async def call_ai_api(question: str, context: str) -> str:
             data = resp.json()
             choices = data.get("choices", [])
             if not choices:
-                return "暂无法解答，AI 响应格式异常。"
+                return _QA_FALLBACK
             
             content = choices[0].get("message", {}).get("content", "").strip()
-            return content or "暂无法解答，AI 未能返回内容。"
+            if not content:
+                return _QA_FALLBACK
+            lowered = content.replace(" ", "")
+            if len(lowered) <= 80 and any(k in lowered for k in ["不知道", "无法回答", "无法解答", "暂无法", "不清楚", "无法根据"]):
+                return _QA_FALLBACK
+            return content
 
     except httpx.HTTPError as e:
-        return f"暂无法解答，网络错误: {str(e)}"
+        return _QA_FALLBACK
     except Exception as e:
-        return f"暂无法解答，发生错误: {str(e)}"
+        return _QA_FALLBACK
 
 
 async def embed_texts(texts: List[str]) -> List[List[float]]:
     settings = get_settings()
     if not settings.ai_enabled or not settings.ai_api_key:
-        raise RuntimeError("AI 服务尚未配置")
+        raise RuntimeError(_QA_FALLBACK)
     if not texts:
         return []
 
@@ -76,15 +84,15 @@ async def embed_texts(texts: List[str]) -> List[List[float]]:
 
     items = data.get("data", [])
     if not isinstance(items, list) or not items:
-        raise RuntimeError("Embedding 响应格式异常")
+        raise RuntimeError(_QA_FALLBACK)
 
     embeddings: List[List[float]] = []
     for item in items:
         emb = item.get("embedding")
         if not isinstance(emb, list) or not emb:
-            raise RuntimeError("Embedding 响应格式异常")
+            raise RuntimeError(_QA_FALLBACK)
         embeddings.append(emb)
 
     if len(embeddings) != len(texts):
-        raise RuntimeError("Embedding 返回数量与输入不一致")
+        raise RuntimeError(_QA_FALLBACK)
     return embeddings

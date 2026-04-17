@@ -9,7 +9,7 @@ A FastAPI-based backend for a WeChat Official Account with two core features:
 
 - WeChat server verification and message callback endpoint
 - Keyword trigger for score query (`查成绩`)
-- Strict doc-based answers with fallback reply: `暂无法解答`
+- Strict doc-based answers with fallback reply: `暂无法回答，请直接询问老师`
 - Simple retrieval + AI API call pipeline (DeepSeek/OpenAI-compatible endpoint)
 - Score query API with input validation and rate limiting
 - Static score query page
@@ -99,8 +99,8 @@ http://127.0.0.1:8000/static/score.html
 
 Sample data:
 
-- `2026001 + 张三`
-- `2026002 + 李四`
+- `25000000001 + 张三`
+- `25000000002 + 李四`
 
 API:
 
@@ -139,7 +139,7 @@ Behavior:
 
 - Contains `查成绩` -> returns score page URL
 - Other text -> Q&A pipeline
-- No related doc evidence -> returns `暂无法解答`
+- No related doc evidence -> returns `暂无法回答，请直接询问老师`
 
 ## WeChat Official Account Configuration
 
