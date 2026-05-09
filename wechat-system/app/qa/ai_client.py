@@ -1,6 +1,23 @@
-from typing import List, Dict, Optional
+import asyncio
+import json
+from typing import Any, List
+
 import httpx
 from app.config import get_settings
+
+try:
+    from tencentcloud.common import credential
+    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+    from tencentcloud.common.profile.client_profile import ClientProfile
+    from tencentcloud.common.profile.http_profile import HttpProfile
+    from tencentcloud.hunyuan.v20230901 import hunyuan_client, models as hunyuan_models
+except Exception:
+    credential = None
+    TencentCloudSDKException = Exception
+    ClientProfile = None
+    HttpProfile = None
+    hunyuan_client = None
+    hunyuan_models = None
 
 
 _QA_FALLBACK = "暂无法回答，请直接询问老师"
@@ -65,30 +82,51 @@ async def call_ai_api(question: str, context: str) -> str:
 
 async def embed_texts(texts: List[str]) -> List[List[float]]:
     settings = get_settings()
-    if not settings.ai_enabled or not settings.ai_api_key:
+    if not settings.ai_enabled or not settings.tencent_secret_id or not settings.tencent_secret_key:
         raise RuntimeError(_QA_FALLBACK)
     if not texts:
         return []
+    if credential is None or ClientProfile is None or HttpProfile is None or hunyuan_client is None or hunyuan_models is None:
+        raise RuntimeError("tencentcloud-sdk-python-hunyuan 未安装")
 
-    url = f"{settings.ai_api_base.rstrip('/')}/embeddings"
-    headers = {
-        "Authorization": f"Bearer {settings.ai_api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {"model": settings.ai_embedding_model, "input": texts}
+    def _get_item_value(item: Any, name: str):
+        if isinstance(item, dict):
+            return item.get(name) or item.get(name[:1].lower() + name[1:])
+        return getattr(item, name, None) or getattr(item, name[:1].lower() + name[1:], None)
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(url, headers=headers, json=payload, timeout=settings.ai_timeout_sec)
-        resp.raise_for_status()
-        data = resp.json()
+    def _sync_get_embeddings():
+        cred = credential.Credential(settings.tencent_secret_id, settings.tencent_secret_key)
+        http_profile = HttpProfile()
+        http_profile.endpoint = settings.tencent_embedding_endpoint
+        http_profile.reqTimeout = settings.ai_timeout_sec
 
-    items = data.get("data", [])
+        client_profile = ClientProfile()
+        client_profile.httpProfile = http_profile
+
+        client = hunyuan_client.HunyuanClient(cred, settings.tencent_region, client_profile)
+        req = hunyuan_models.GetEmbeddingRequest()
+        req.from_json_string(json.dumps({"InputList": texts}, ensure_ascii=False))
+        return client.GetEmbedding(req)
+
+    try:
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(None, _sync_get_embeddings)
+    except TencentCloudSDKException as e:
+        raise RuntimeError(_QA_FALLBACK) from e
+
+    items = getattr(response, "Data", None) or []
     if not isinstance(items, list) or not items:
         raise RuntimeError(_QA_FALLBACK)
 
+    indexed_items = []
+    for position, item in enumerate(items):
+        index = _get_item_value(item, "Index")
+        indexed_items.append((index if isinstance(index, int) else position, item))
+    indexed_items.sort(key=lambda pair: pair[0])
+
     embeddings: List[List[float]] = []
-    for item in items:
-        emb = item.get("embedding")
+    for _, item in indexed_items:
+        emb = _get_item_value(item, "Embedding")
         if not isinstance(emb, list) or not emb:
             raise RuntimeError(_QA_FALLBACK)
         embeddings.append(emb)

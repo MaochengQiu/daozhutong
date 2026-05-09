@@ -1,3 +1,9 @@
+wechat-system/data/
+*.xlsx
+*.xls
+*.docx
+*.pdf
+
 __pycache__/
 *.pyc
 .env

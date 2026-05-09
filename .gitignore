@@ -1,0 +1,45 @@
+# macOS
+.DS_Store
+**/.DS_Store
+__MACOSX/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python virtual env
+.venv/
+venv/
+env/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# IDE / AI tools
+.vscode/
+.idea/
+.trae/
+.codex/
+.trae_push_payload.json
+
+# Vercel local config
+.vercel/
+
+# Local vector database / runtime data
+wechat-system/qdrant_storage/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+

@@ -7,52 +7,81 @@
   <style>
     :root {
       --bg: #f6f7fb;
+      --card: #ffffff;
       --text: #111827;
       --muted: #6b7280;
       --primary: #2563eb;
       --primary2: #1d4ed8;
       --danger: #dc2626;
-      --shadow: 0 18px 42px rgba(17, 24, 39, 0.10);
+      --border: rgba(229, 231, 235, 0.9);
+      --shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--text);
       background: var(--bg);
       overflow: hidden;
     }
 
-    body.empty {
-      background: linear-gradient(135deg, rgba(239, 246, 255, 1), rgba(245, 243, 255, 1));
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(246, 247, 251, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .bg {
-      position: fixed;
-      inset: -30%;
-      background:
-        radial-gradient(800px 520px at 18% 18%, rgba(59, 130, 246, 0.22), transparent 55%),
-        radial-gradient(800px 520px at 82% 25%, rgba(124, 58, 237, 0.20), transparent 55%),
-        radial-gradient(700px 520px at 60% 85%, rgba(29, 78, 216, 0.14), transparent 60%);
-      filter: blur(18px);
-      animation: drift 14s ease-in-out infinite alternate;
-      pointer-events: none;
-      transform: translateZ(0);
+    .topbar-inner {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    body.empty .bg { display: none; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
 
-    @keyframes drift {
-      0% { transform: translate3d(-2%, -1%, 0) scale(1.02); }
-      50% { transform: translate3d(1%, 2%, 0) scale(1.06); }
-      100% { transform: translate3d(2%, -2%, 0) scale(1.03); }
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: rgba(17, 24, 39, 0.8);
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.18);
+      color: rgba(17, 24, 39, 0.92);
     }
 
     .stage {
       position: relative;
-      height: 100%;
+      height: calc(100vh - 54px);
       width: 100%;
       display: flex;
       justify-content: center;
@@ -73,13 +102,24 @@
     .empty-greet {
       display: none;
       text-align: center;
-      font-size: 35px;
-      font-weight: 700;
+      font-size: 26px;
+      font-weight: 900;
       letter-spacing: 0.2px;
       color: rgba(17, 24, 39, 0.92);
-      margin-bottom: 35px;
+      margin-bottom: 16px;
     }
     body.empty .empty-greet { display: block; }
+
+    .empty-sub {
+      display: none;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    body.empty .empty-sub { display: block; }
 
     .chat {
       flex: 1;
@@ -102,7 +142,7 @@
       padding: 10px 12px;
       border-radius: 16px;
       border: none;
-      background: rgba(255, 255, 255, 0.74);
+      background: rgba(255, 255, 255, 0.92);
       box-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
       white-space: pre-wrap;
       word-break: break-word;
@@ -122,31 +162,11 @@
     .composer-shell {
       position: relative;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.96);
       box-shadow: var(--shadow);
       padding: 12px 12px 10px;
       display: grid;
       gap: 10px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    body.empty .composer-shell::before {
-      content: "";
-      position: absolute;
-      inset: -8px;
-      border-radius: 20px;
-      background: linear-gradient(120deg, rgba(59, 130, 246, 0.26), rgba(124, 58, 237, 0.22), rgba(29, 78, 216, 0.20));
-      background-size: 200% 200%;
-      filter: blur(8px);
-      opacity: 0.70;
-      animation: glow 4.2s ease-in-out infinite alternate;
-      z-index: -1;
-    }
-
-    @keyframes glow {
-      0% { background-position: 0% 50%; transform: translateZ(0) scale(1.00); }
-      100% { background-position: 100% 50%; transform: translateZ(0) scale(1.02); }
     }
 
     .composer {
@@ -160,11 +180,11 @@
       min-height: 44px;
       max-height: 140px;
       padding: 12px 12px;
-      border: none;
+      border: 1px solid var(--border);
       border-radius: 14px;
       font-size: 14px;
       outline: none;
-      background: rgba(249, 250, 251, 0.85);
+      background: #fff;
       transition: box-shadow 120ms ease;
     }
     textarea::placeholder { color: #9ca3af; }
@@ -203,18 +223,36 @@
     }
     .field-error.show { visibility: visible; }
   </style>
+  <link rel="stylesheet" href="/static/ui.css?v=20260509-polish" />
 </head>
-<body class="empty">
-  <div class="bg" aria-hidden="true"></div>
-  <div class="stage">
+<body class="page-chat empty">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/static/home.html">微信助手</a>
+      <nav class="nav" aria-label="导航">
+        <a href="/static/home.html">首页</a>
+        <a href="/static/score.html?v=20260509-idcard">成绩查询</a>
+        <a href="/static/chat.html" aria-current="page">智能问答</a>
+      </nav>
+    </div>
+  </div>
+  <div class="study-decor" aria-hidden="true">
+    <span class="book book-open"></span>
+    <span class="book book-three"></span>
+    <span class="book book-two"></span>
+    <span class="book book-one"></span>
+  </div>
+  <main class="stage">
     <div class="layout">
       <div id="chat" class="chat" aria-live="polite"></div>
 
       <div class="empty-greet">你好，请问你有什么问题</div>
+      <p class="empty-sub">输入问题并回车发送；仅基于知识库回答，无法确定会提示你去问老师。</p>
 
       <div class="composer-shell">
         <form id="askForm" class="composer" autocomplete="off">
           <div>
+            <label class="sr-only" for="question">问题</label>
             <textarea id="question" placeholder="请输入问题（回车发送，Shift+回车换行）" maxlength="2000"></textarea>
             <div id="questionError" class="field-error" role="alert">输入格式错误，请重新输入</div>
           </div>
@@ -225,7 +263,7 @@
         </form>
       </div>
     </div>
-  </div>
+  </main>
   <script>
     const chatEl = document.getElementById("chat");
     const formEl = document.getElementById("askForm");
@@ -238,7 +276,7 @@
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
 
