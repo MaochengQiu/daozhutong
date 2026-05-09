@@ -3,7 +3,7 @@
 A FastAPI-based backend for a WeChat Official Account with two core features:
 
 - Document-grounded intelligent Q&A
-- Student score query page (`student_id + name`)
+- Student score query page (`student_id + name + ID card suffix`)
 
 ## Features
 
@@ -99,13 +99,23 @@ http://127.0.0.1:8000/static/score.html
 
 Sample data:
 
-- `25000000001 + 张三`
-- `25000000002 + 李四`
+- `2026001 + 张三 + 000001`
+- `2026002 + 李四 + 000002`
 
 API:
 
 ```text
 POST /api/score/query
+```
+
+Request body:
+
+```json
+{
+  "student_id": "2026001",
+  "name": "张三",
+  "id_card_suffix": "000001"
+}
 ```
 
 ### QA Chat Page

@@ -6,15 +6,17 @@
   <title>成绩查询</title>
   <style>
     :root {
-      --bg: #f6f7fb;
+      --bg: #f8fafc;
       --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --primary: #2563eb;
-      --primary2: #1d4ed8;
+      --text: #020617;
+      --muted: #64748b;
+      --soft: #f1f5f9;
+      --border: #e2e8f0;
+      --primary: #0369a1;
+      --primary2: #075985;
       --danger: #dc2626;
-      --shadow: 0 10px 30px rgba(17, 24, 39, 0.10);
+      --success: #047857;
+      --shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
       --radius: 16px;
     }
 
@@ -24,74 +26,145 @@
       min-height: 100vh;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--text);
-      background: radial-gradient(900px 450px at 20% 10%, rgba(37, 99, 235, 0.12), transparent 60%),
-        radial-gradient(900px 450px at 90% 20%, rgba(29, 78, 216, 0.10), transparent 55%),
+      background:
+        linear-gradient(180deg, rgba(224, 242, 254, 0.55), rgba(248, 250, 252, 0) 280px),
         var(--bg);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(248, 250, 252, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 800;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: rgba(17, 24, 39, 0.8);
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    .nav a:hover,
+    .nav a[aria-current="page"] {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.18);
+      color: rgba(17, 24, 39, 0.92);
+    }
+
+    .brand:focus-visible,
+    .nav a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(3, 105, 161, 0.28);
+      outline-offset: 3px;
+    }
+
+    .page {
+      min-height: calc(100vh - 54px);
       display: grid;
       place-items: center;
-      padding: 24px 16px;
+      padding: 32px 16px;
     }
 
-    .container { width: 100%; max-width: 560px; }
+    .container { width: 100%; max-width: 680px; }
     .card {
       background: var(--card);
-      border: 1px solid rgba(229, 231, 235, 0.8);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px 18px;
+      padding: 28px;
     }
 
-    header { margin-bottom: 16px; }
+    header {
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
     h1 {
       margin: 0;
-      font-size: 22px;
-      letter-spacing: 0.2px;
+      font-size: 24px;
+      line-height: 1.2;
     }
     .subtitle {
       margin-top: 8px;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--muted);
-      line-height: 1.45;
+      line-height: 1.6;
     }
 
-    form { margin-top: 14px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    form { margin-top: 0; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .field { display: grid; gap: 8px; }
-    label { font-size: 13px; color: var(--muted); }
+    label { font-size: 13px; font-weight: 700; color: #334155; }
     input {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 12px 12px;
+      padding: 13px 14px;
       font-size: 15px;
-      outline: none;
-      transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+      color: var(--text);
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
       background: #fff;
     }
     input::placeholder { color: #9ca3af; }
     input:focus {
-      border-color: rgba(37, 99, 235, 0.65);
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      border-color: rgba(3, 105, 161, 0.65);
+      box-shadow: 0 0 0 4px rgba(3, 105, 161, 0.12);
     }
     input[aria-invalid="true"] {
       border-color: rgba(220, 38, 38, 0.55);
       box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
     }
 
-    .actions { margin-top: 14px; display: grid; gap: 10px; }
+    .actions { margin-top: 18px; display: grid; gap: 10px; }
     button {
       border: none;
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 13px 16px;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 800;
       color: #fff;
-      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      background: var(--primary);
       cursor: pointer;
-      transition: transform 120ms ease, filter 120ms ease;
+      transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+      box-shadow: 0 12px 22px rgba(3, 105, 161, 0.18);
     }
+    button:hover { background: var(--primary2); }
     button:active { transform: translateY(1px); }
-    button:disabled { cursor: not-allowed; filter: grayscale(25%) opacity(0.7); }
+    button:disabled { cursor: not-allowed; filter: grayscale(25%) opacity(0.72); box-shadow: none; }
 
     .hint { font-size: 12px; color: var(--muted); text-align: center; }
     .field-error {
@@ -102,12 +175,12 @@
       visibility: hidden;
     }
     .field-error.show { visibility: visible; }
-    #result { margin-top: 18px; }
+    #result { margin-top: 20px; display: grid; gap: 12px; }
     .status {
-      padding: 12px 12px;
+      padding: 13px 14px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: #fafafa;
+      background: var(--soft);
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
@@ -118,13 +191,22 @@
       background: rgba(220, 38, 38, 0.06);
       color: var(--danger);
     }
+    .status.success {
+      border-color: rgba(4, 120, 87, 0.26);
+      background: rgba(4, 120, 87, 0.07);
+      color: var(--success);
+    }
 
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
+      min-width: 360px;
       background: #fff;
     }
     thead th {
@@ -133,7 +215,7 @@
       color: var(--muted);
       font-weight: 600;
       padding: 10px 12px;
-      background: #fafafa;
+      background: var(--soft);
       border-bottom: 1px solid var(--border);
     }
     tbody td {
@@ -142,42 +224,109 @@
       font-size: 14px;
     }
     tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
     .score { font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
     .footer { margin-top: 14px; text-align: center; font-size: 12px; color: var(--muted); }
+
+    @media (min-width: 720px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .field.name-field {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .nav {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .page {
+        min-height: auto;
+        place-items: start center;
+        padding: 20px 12px;
+      }
+      .card {
+        padding: 20px 16px;
+        border-radius: 14px;
+      }
+      h1 { font-size: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
   </style>
+  <link rel="stylesheet" href="/static/ui.css?v=20260509-polish" />
 </head>
-<body>
-  <div class="container">
-    <div class="card">
-      <header>
-        <h1>成绩查询</h1>
-        <div class="subtitle">请输入姓名与学号后点击查询，系统将从后端数据库检索并返回你的课程成绩。</div>
-      </header>
-
-      <form id="queryForm" autocomplete="off">
-        <div class="grid">
-          <div class="field">
-            <label for="name">姓名</label>
-            <input id="name" maxlength="64" inputmode="text" placeholder="例如：张三" required />
-            <div id="nameError" class="field-error" role="alert">输入格式错误，请重新输入</div>
-          </div>
-          <div class="field">
-            <label for="studentId">学号</label>
-            <input id="studentId" maxlength="11" inputmode="numeric" pattern="[0-9]{11}" placeholder="例如：20260000001" required />
-            <div id="studentIdError" class="field-error" role="alert">输入格式错误，请重新输入</div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button id="queryBtn" type="submit">查询</button>
-          <div class="hint">为保护服务稳定，频繁查询可能会被临时限制</div>
-        </div>
-      </form>
-
-      <div id="result" aria-live="polite"></div>
-      <div class="footer">如查询不到成绩，请核对姓名与学号是否一致</div>
+<body class="page-score">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/static/home.html">微信助手</a>
+      <nav class="nav" aria-label="导航">
+        <a href="/static/home.html">首页</a>
+        <a href="/static/score.html?v=20260509-idcard" aria-current="page">成绩查询</a>
+        <a href="/static/chat.html">智能问答</a>
+      </nav>
     </div>
   </div>
+  <div class="study-decor" aria-hidden="true">
+    <span class="book book-open"></span>
+    <span class="book book-three"></span>
+    <span class="book book-two"></span>
+    <span class="book book-one"></span>
+  </div>
+
+  <main class="page">
+    <div class="container">
+      <div class="card">
+        <header>
+          <h1>成绩查询</h1>
+          <div class="subtitle">填写姓名、学号与身份证后6位，系统会核验身份后展示个人课程成绩。</div>
+        </header>
+
+        <form id="queryForm" autocomplete="off">
+          <div class="grid">
+            <div class="field name-field">
+              <label for="name">姓名</label>
+              <input id="name" maxlength="64" inputmode="text" placeholder="例如：张三" required />
+              <div id="nameError" class="field-error" role="alert">输入格式错误，请重新输入</div>
+            </div>
+            <div class="field">
+              <label for="studentId">学号</label>
+              <input id="studentId" maxlength="11" inputmode="numeric" pattern="[0-9]{2,11}" placeholder="例如：2026001" required />
+              <div id="studentIdError" class="field-error" role="alert">输入格式错误，请重新输入</div>
+            </div>
+            <div class="field">
+              <label for="idCardSuffix">身份证后6位</label>
+              <input id="idCardSuffix" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="例如：000001" required />
+              <div id="idCardSuffixError" class="field-error" role="alert">请输入身份证后6位数字</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="queryBtn" type="submit">查询</button>
+            <div class="hint">为保护服务稳定，频繁查询可能会被临时限制</div>
+          </div>
+        </form>
+
+        <div id="result" aria-live="polite"></div>
+        <div class="footer">如查询不到成绩，请核对姓名、学号与身份证后6位是否一致</div>
+      </div>
+    </div>
+  </main>
 
   <script>
     const formEl = document.getElementById("queryForm");
@@ -185,10 +334,13 @@
     const resultEl = document.getElementById("result");
     const nameEl = document.getElementById("name");
     const studentIdEl = document.getElementById("studentId");
+    const idCardSuffixEl = document.getElementById("idCardSuffix");
     const nameErrorEl = document.getElementById("nameError");
     const studentIdErrorEl = document.getElementById("studentIdError");
+    const idCardSuffixErrorEl = document.getElementById("idCardSuffixError");
     const NAME_RE = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+$/;
-    const STUDENT_ID_RE = /^\d{11}$/;
+    const STUDENT_ID_RE = /^\d{2,11}$/;
+    const ID_CARD_SUFFIX_RE = /^\d{6}$/;
     let nameComposing = false;
 
     function setStatus(message, type) {
@@ -214,12 +366,15 @@
         .map((r) => `<tr><td>${escapeHtml(r.course)}</td><td class="score">${escapeHtml(r.score)}</td></tr>`)
         .join("");
       resultEl.innerHTML = `
-        <table>
-          <thead>
-            <tr><th>课程</th><th>成绩</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="status success">查询成功，以下为本人成绩。</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>课程</th><th>成绩</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       `;
     }
 
@@ -249,6 +404,15 @@
       setFieldError(studentIdErrorEl, show);
     }
 
+    function sanitizeIdCardSuffixInput() {
+      const raw = idCardSuffixEl.value;
+      const cleaned = raw.replace(/\D/g, "").slice(0, 6);
+      if (raw !== cleaned) idCardSuffixEl.value = cleaned;
+      const show = idCardSuffixEl.value.length > 0 && !ID_CARD_SUFFIX_RE.test(idCardSuffixEl.value);
+      setInvalid(idCardSuffixEl, show);
+      setFieldError(idCardSuffixErrorEl, show);
+    }
+
     function normalizeName(raw) {
       return raw.trim();
     }
@@ -257,16 +421,23 @@
       return raw.trim();
     }
 
+    function normalizeIdCardSuffix(raw) {
+      return raw.trim();
+    }
+
     function validateInputs() {
       const name = normalizeName(nameEl.value);
       const studentId = normalizeStudentId(studentIdEl.value);
+      const idCardSuffix = normalizeIdCardSuffix(idCardSuffixEl.value);
       setInvalid(nameEl, false);
       setInvalid(studentIdEl, false);
+      setInvalid(idCardSuffixEl, false);
       setFieldError(nameErrorEl, false);
       setFieldError(studentIdErrorEl, false);
+      setFieldError(idCardSuffixErrorEl, false);
 
-      if (!name || !studentId) {
-        setStatus("请填写姓名与学号后再查询。", "error");
+      if (!name || !studentId || !idCardSuffix) {
+        setStatus("请填写姓名、学号与身份证后6位后再查询。", "error");
         if (!name) {
           setInvalid(nameEl, true);
           setFieldError(nameErrorEl, true);
@@ -274,6 +445,10 @@
         if (!studentId) {
           setInvalid(studentIdEl, true);
           setFieldError(studentIdErrorEl, true);
+        }
+        if (!idCardSuffix) {
+          setInvalid(idCardSuffixEl, true);
+          setFieldError(idCardSuffixErrorEl, true);
         }
         return null;
       }
@@ -289,7 +464,13 @@
         setStatus("输入格式错误，请重新输入", "error");
         return null;
       }
-      return { name, studentId };
+      if (!ID_CARD_SUFFIX_RE.test(idCardSuffix)) {
+        setInvalid(idCardSuffixEl, true);
+        setFieldError(idCardSuffixErrorEl, true);
+        setStatus("身份证后6位必须为6位数字。", "error");
+        return null;
+      }
+      return { name, studentId, idCardSuffix };
     }
 
     async function query() {
@@ -297,7 +478,7 @@
       if (!payload) {
         return;
       }
-      const { name, studentId } = payload;
+      const { name, studentId, idCardSuffix } = payload;
 
       btnEl.disabled = true;
       setStatus("查询中…");
@@ -305,7 +486,7 @@
         const resp = await fetch("/api/score/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ student_id: studentId, name }),
+          body: JSON.stringify({ student_id: studentId, name, id_card_suffix: idCardSuffix }),
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
@@ -349,6 +530,10 @@
 
     studentIdEl.addEventListener("input", () => {
       sanitizeStudentIdInput();
+    });
+
+    idCardSuffixEl.addEventListener("input", () => {
+      sanitizeIdCardSuffixInput();
     });
   </script>
 </body>

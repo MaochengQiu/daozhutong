@@ -8,11 +8,12 @@ from app.score.models import ScoreRecord
 
 class ScoreService:
     @staticmethod
-    def query_personal_scores(db: Session, student_id: str, name: str) -> List[ScoreRecord]:
+    def query_personal_scores(db: Session, student_id: str, name: str, id_card_suffix: str) -> List[ScoreRecord]:
         stmt = (
             select(ScoreRecord)
             .where(ScoreRecord.student_id == student_id.strip())
             .where(ScoreRecord.name == name.strip())
+            .where(ScoreRecord.id_card_suffix == id_card_suffix.strip())
             .order_by(ScoreRecord.course.asc())
         )
         return list(db.execute(stmt).scalars().all())

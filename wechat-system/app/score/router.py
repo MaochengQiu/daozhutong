@@ -19,6 +19,7 @@ _rate_window: Dict[str, Deque[float]] = defaultdict(deque)
 class ScoreQueryRequest(BaseModel):
     student_id: str = Field(min_length=2, max_length=32)
     name: str = Field(min_length=1, max_length=64)
+    id_card_suffix: str = Field(pattern=r"^\d{6}$")
 
     @field_validator("student_id", "name")
     @classmethod
@@ -26,6 +27,14 @@ class ScoreQueryRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("字段不能为空")
+        return v
+
+    @field_validator("id_card_suffix")
+    @classmethod
+    def valid_id_card_suffix(cls, v: str) -> str:
+        v = v.strip()
+        if not v.isdigit() or len(v) != 6:
+            raise ValueError("身份证后6位必须为6位数字")
         return v
 
 
@@ -44,9 +53,9 @@ def query_score(payload: ScoreQueryRequest, request: Request, db: Session = Depe
     client_ip = request.client.host if request.client else "unknown"
     _check_rate_limit(client_ip)
 
-    records = ScoreService.query_personal_scores(db, payload.student_id, payload.name)
+    records = ScoreService.query_personal_scores(db, payload.student_id, payload.name, payload.id_card_suffix)
     if not records:
-        return {"ok": False, "message": "未查询到成绩，请核对学号和姓名"}
+        return {"ok": False, "message": "未查询到成绩，请核对姓名、学号和身份证后6位"}
 
     return {
         "ok": True,

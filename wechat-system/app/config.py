@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     wechat_token: str = Field(default="replace_with_wechat_token")
     wechat_score_keyword: str = "查成绩"
-    score_page_url: str = "http://localhost:8000/static/score.html"
+    score_page_url: str = "http://localhost:8000/static/score.html?v=20260509-idcard"
 
     ai_enabled: bool = True
     ai_api_key: str = ""

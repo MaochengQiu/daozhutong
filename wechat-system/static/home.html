@@ -6,16 +6,15 @@
   <title>基于微信生态的问答智能体</title>
   <style>
     :root {
-      --bg1: #eff6ff;
-      --bg2: #f5f3ff;
+      --bg: #f6f7fb;
+      --card: #ffffff;
       --text: #111827;
       --muted: #6b7280;
-      --border: rgba(229, 231, 235, 0.85);
-      --shadow: 0 18px 42px rgba(17, 24, 39, 0.10);
+      --border: rgba(229, 231, 235, 0.9);
+      --shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
       --primary: #2563eb;
       --primary2: #1d4ed8;
-      --accent: #7c3aed;
-      --radius: 18px;
+      --radius: 14px;
     }
 
     * { box-sizing: border-box; }
@@ -24,20 +23,59 @@
       min-height: 100vh;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--text);
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      overflow-x: hidden;
+      background: var(--bg);
     }
 
-    .bg {
-      position: fixed;
-      inset: -30%;
-      pointer-events: none;
-      background:
-        radial-gradient(820px 520px at 20% 15%, rgba(37, 99, 235, 0.16), transparent 60%),
-        radial-gradient(820px 520px at 82% 20%, rgba(124, 58, 237, 0.14), transparent 60%),
-        radial-gradient(740px 520px at 60% 88%, rgba(29, 78, 216, 0.10), transparent 60%);
-      filter: blur(18px);
-      transform: translateZ(0);
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(246, 247, 251, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: rgba(17, 24, 39, 0.8);
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+
+    .nav a:hover {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.18);
+      color: rgba(17, 24, 39, 0.92);
     }
 
     .stage {
@@ -50,23 +88,21 @@
 
     .card {
       width: 100%;
-      max-width: 760px;
-      background: rgba(255, 255, 255, 0.78);
-      border: none;
+      max-width: 920px;
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 34px 26px 28px;
+      padding: 28px 20px;
       display: grid;
-      gap: 34px;
+      gap: 18px;
     }
 
-    header { display: grid; gap: 14px; text-align: center; }
+    header { display: grid; gap: 10px; text-align: left; }
     h1 {
       margin: 0;
-      font-size: 35px;
-      font-weight: 800;
+      font-size: 26px;
+      font-weight: 900;
       letter-spacing: 0.2px;
       line-height: 1.15;
     }
@@ -80,7 +116,7 @@
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 12px;
     }
     @media (max-width: 640px) {
       .grid { grid-template-columns: 1fr; }
@@ -89,20 +125,19 @@
     .tile {
       text-decoration: none;
       color: inherit;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.70);
-      border: 1px solid rgba(229, 231, 235, 0.75);
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--border);
       padding: 16px 14px;
       display: grid;
       gap: 10px;
-      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-      box-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
     }
     .tile:active { transform: translateY(1px); }
     .tile:hover {
       transform: translateY(-1px);
       border-color: rgba(37, 99, 235, 0.28);
-      box-shadow: 0 16px 30px rgba(17, 24, 39, 0.10);
+      box-shadow: 0 14px 28px rgba(17, 24, 39, 0.10);
     }
 
     .tile-title {
@@ -117,15 +152,7 @@
       font-weight: 800;
       letter-spacing: 0.2px;
     }
-    .tag {
-      font-size: 12px;
-      color: rgba(17, 24, 39, 0.72);
-      background: rgba(17, 24, 39, 0.06);
-      border: 1px solid rgba(17, 24, 39, 0.08);
-      padding: 4px 8px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
+    .tag { display: none; }
 
     .desc {
       margin: 0;
@@ -149,39 +176,53 @@
       background: linear-gradient(135deg, var(--primary), var(--primary2));
       width: fit-content;
     }
-    .btn.alt { background: linear-gradient(135deg, var(--accent), rgba(124, 58, 237, 0.78)); }
+    .btn.alt { background: linear-gradient(135deg, #111827, rgba(17, 24, 39, 0.86)); }
 
   </style>
+  <link rel="stylesheet" href="/static/ui.css?v=20260509-polish" />
 </head>
-<body>
-  <div class="bg" aria-hidden="true"></div>
-  <div class="stage">
+<body class="page-home">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/static/home.html">微信助手</a>
+      <nav class="nav" aria-label="导航">
+        <a href="/static/home.html" aria-current="page">首页</a>
+        <a href="/static/score.html?v=20260509-idcard">成绩查询</a>
+        <a href="/static/chat.html">智能问答</a>
+      </nav>
+    </div>
+  </div>
+  <div class="study-decor" aria-hidden="true">
+    <span class="book book-open"></span>
+    <span class="book book-three"></span>
+    <span class="book book-two"></span>
+    <span class="book book-one"></span>
+  </div>
+  <main class="stage">
     <div class="card">
       <header>
-        <h1>基于微信生态的问答智能体</h1>
-        <p class="subtitle">选择下方功能进入对应页面：成绩查询或智能问答。</p>
+        <h1>微信问答助手</h1>
+        <p class="subtitle">把常用的成绩查询和知识问答放在一个安静、清晰的入口里。</p>
       </header>
 
       <div class="grid">
-        <a class="tile" href="/static/score.html">
+        <a class="tile" href="/static/score.html?v=20260509-idcard">
           <div class="tile-title">
             <h2>成绩查询</h2>
-            <span class="tag">Score</span>
           </div>
-          <p class="desc">输入姓名与学号，查询个人课程成绩。</p>
+          <p class="desc">输入姓名、学号与身份证后6位，查询个人课程成绩。</p>
           <span class="btn">进入</span>
         </a>
 
         <a class="tile" href="/static/chat.html">
           <div class="tile-title">
             <h2>问答系统</h2>
-            <span class="tag">QA</span>
           </div>
           <p class="desc">输入问题并回车发送，获取智能回答。</p>
           <span class="btn alt">进入</span>
         </a>
       </div>
     </div>
-  </div>
+  </main>
 </body>
 </html>
