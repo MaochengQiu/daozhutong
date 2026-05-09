@@ -1,5 +1,5 @@
 import asyncio
-import hashlib
+import uuid
 from typing import Any, Dict, List, Optional
 
 from app.qa.doc_processor import load_documents
@@ -44,8 +44,7 @@ def _chunk_text(text: str, chunk_size: int, overlap: int) -> List[str]:
 
 
 def _point_id(source: str, chunk_index: int) -> str:
-    raw = f"{source}#{chunk_index}".encode("utf-8")
-    return hashlib.sha1(raw).hexdigest()
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source}#{chunk_index}"))
 
 
 def _get_qdrant_client() -> "QdrantClient":
@@ -89,7 +88,7 @@ async def _ensure_index():
             raise RuntimeError("知识库为空")
 
         embeddings: List[List[float]] = []
-        batch_size = 64
+        batch_size = 50
         for start in range(0, len(chunks), batch_size):
             batch = chunks[start : start + batch_size]
             vectors = await embed_texts([c["text"] for c in batch])
@@ -97,12 +96,30 @@ async def _ensure_index():
 
         vector_size = len(embeddings[0])
 
-        def _sync_recreate_and_upsert():
+        def _sync_ensure_collection_and_upsert():
             client = _get_qdrant_client()
-            client.recreate_collection(
-                collection_name=settings.qdrant_collection,
-                vectors_config=qmodels.VectorParams(size=vector_size, distance=qmodels.Distance.COSINE),
-            )
+
+            def _current_vector_size():
+                try:
+                    info = client.get_collection(settings.qdrant_collection)
+                    vectors = info.config.params.vectors
+                    return getattr(vectors, "size", None)
+                except Exception:
+                    return None
+
+            current_size = _current_vector_size()
+            if current_size != vector_size:
+                if client.collection_exists(settings.qdrant_collection):
+                    client.delete_collection(settings.qdrant_collection)
+                try:
+                    client.create_collection(
+                        collection_name=settings.qdrant_collection,
+                        vectors_config=qmodels.VectorParams(size=vector_size, distance=qmodels.Distance.COSINE),
+                    )
+                except Exception:
+                    if _current_vector_size() != vector_size:
+                        raise
+
             points = [
                 qmodels.PointStruct(
                     id=chunks[i]["id"],
@@ -113,7 +130,7 @@ async def _ensure_index():
             ]
             client.upsert(collection_name=settings.qdrant_collection, points=points)
 
-        await _run_blocking(_sync_recreate_and_upsert)
+        await _run_blocking(_sync_ensure_collection_and_upsert)
         _index_ready = True
 
 
@@ -133,12 +150,13 @@ async def answer_question(question: str) -> str:
 
         def _sync_search():
             client = _get_qdrant_client()
-            return client.search(
+            result = client.query_points(
                 collection_name=settings.qdrant_collection,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=settings.qa_retrieval_top_k,
                 with_payload=True,
             )
+            return getattr(result, "points", result)
 
         hits = await _run_blocking(_sync_search)
         contexts: List[str] = []

@@ -10,7 +10,7 @@ A FastAPI-based backend for a WeChat Official Account with two core features:
 - WeChat server verification and message callback endpoint
 - Keyword trigger for score query (`查成绩`)
 - Strict doc-based answers with fallback reply: `暂无法回答，请直接询问老师`
-- Simple retrieval + AI API call pipeline (DeepSeek/OpenAI-compatible endpoint)
+- Simple retrieval + AI API call pipeline (DeepSeek/OpenAI-compatible chat endpoint + Tencent Cloud Hunyuan embeddings)
 - Score query API with input validation and rate limiting
 - Static score query page
 
@@ -65,7 +65,15 @@ Edit `.env`:
 - `AI_API_KEY`: your model provider key
 - `AI_API_BASE`: API base URL (for example DeepSeek OpenAI-compatible endpoint)
 - `AI_CHAT_MODEL`: model name
+- `TENCENT_SECRET_ID`: Tencent Cloud SecretId for Hunyuan embeddings; leave empty in code and fill it in your local `.env`
+- `TENCENT_SECRET_KEY`: Tencent Cloud SecretKey for Hunyuan embeddings; leave empty in code and fill it in your local `.env`
+- `TENCENT_REGION`: Tencent Cloud region, default `ap-guangzhou`
+- `TENCENT_EMBEDDING_ENDPOINT`: Tencent Cloud Hunyuan endpoint, default `hunyuan.tencentcloudapi.com`
 - `DATABASE_URL`: default is sqlite file
+
+Document Q&A supports `.txt`, `.docx`, and text-based `.pdf` files. Set `DOCS_PATH` to either a single supported file or a directory containing supported files.
+
+After switching embedding providers, recreate the Qdrant collection because Tencent Cloud Hunyuan embeddings use a different vector space and dimension from OpenAI embeddings.
 
 ## Initialize Database
 
@@ -74,6 +82,28 @@ python scripts/init_db.py
 ```
 
 This creates tables and inserts sample score data if empty.
+
+## Import Score XLSX
+
+Score query supports importing `.xlsx` score files into the database.
+
+Required columns can use either English or Chinese headers:
+
+```text
+student_id / 学号
+name / 姓名
+id_card_suffix / 身份证后6位
+course / 课程 / 科目
+score / 成绩 / 分数
+```
+
+Example:
+
+```bash
+python scripts/import_scores.py data/scores.xlsx --replace
+```
+
+Use `--replace` when the Excel file should become the full score table. Without `--replace`, matching records with the same `student_id + name + id_card_suffix + course` are updated and other records are kept.
 
 ## Run
 

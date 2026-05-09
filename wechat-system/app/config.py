@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "wechat-system"
     app_host: str = "0.0.0.0"
@@ -23,8 +23,12 @@ class Settings(BaseSettings):
     ai_api_key: str = ""
     ai_api_base: str = "https://api.deepseek.com"
     ai_chat_model: str = "deepseek-chat"
-    ai_embedding_model: str = "text-embedding-3-small"
     ai_timeout_sec: int = 20
+
+    tencent_secret_id: str = ""
+    tencent_secret_key: str = ""
+    tencent_region: str = "ap-guangzhou"
+    tencent_embedding_endpoint: str = "hunyuan.tencentcloudapi.com"
 
     docs_path: str = str(BASE_DIR / "docs" / "faq.txt")
 

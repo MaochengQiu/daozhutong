@@ -7,7 +7,7 @@
   - 移动端（<640px）自动单列化、间距与字号收敛，保证移动端易读易用。
 - **AI 智能问答正式接入**：
   - 前端问答页（chat.html）完整接入后端 `POST /api/qa/ask` 接口。
-  - 后端检索 `docs/faq.txt` 知识库内容，结合 DeepSeek AI 生成回答。
+  - 后端检索 `docs/faq.txt` 知识库内容，结合 DeepSeek AI 生成回答，向量检索使用腾讯云混元 Embedding。
   - AI 回答在前端以气泡形式渲染展示。
 
 ## 2026-04-14（上午）
