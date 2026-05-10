@@ -25,12 +25,45 @@ def _chunk_text(text: str, chunk_size: int, overlap: int) -> List[str]:
     text = text.strip()
     if not text:
         return []
+
+    chunks: List[str] = []
+    current: List[str] = []
+    has_answer = False
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current:
+                current.append("")
+            continue
+
+        normalized = line.lstrip()
+        is_question = normalized.startswith(("Q:", "Q："))
+        is_answer = normalized.startswith(("A:", "A："))
+
+        if is_question and current and has_answer:
+            chunk = "\n".join(current).strip()
+            if chunk:
+                chunks.append(chunk)
+            current = []
+            has_answer = False
+
+        current.append(line)
+        if is_answer:
+            has_answer = True
+
+    if current and has_answer:
+        chunk = "\n".join(current).strip()
+        if chunk:
+            chunks.append(chunk)
+
+    if chunks:
+        return chunks
+
     if chunk_size <= 0:
         return [text]
     overlap = max(0, min(overlap, chunk_size - 1)) if chunk_size > 1 else 0
     step = max(1, chunk_size - overlap)
 
-    chunks: List[str] = []
     start = 0
     while start < len(text):
         end = min(len(text), start + chunk_size)

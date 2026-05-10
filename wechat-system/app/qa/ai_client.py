@@ -21,6 +21,32 @@ except Exception:
 
 
 _QA_FALLBACK = "暂无法回答，请直接询问老师"
+_UNCERTAIN_ANSWER_MARKERS = [
+    "不知道",
+    "无法回答",
+    "无法解答",
+    "暂无法",
+    "不清楚",
+    "无法根据",
+    "无法查到",
+    "无法提供",
+    "没有相关信息",
+    "没有提及",
+    "未提及",
+    "未提供",
+    "没有说明",
+]
+
+
+def _normalize_answer(content: str) -> str:
+    content = content.strip()
+    if not content:
+        return _QA_FALLBACK
+
+    normalized = "".join(content.split())
+    if any(marker in normalized for marker in _UNCERTAIN_ANSWER_MARKERS):
+        return _QA_FALLBACK
+    return content
 
 
 async def call_ai_api(question: str, context: str) -> str:
@@ -39,7 +65,7 @@ async def call_ai_api(question: str, context: str) -> str:
 
     system_prompt = (
         "你是一个校园助手。请基于提供的【上下文】回答用户提出的【问题】。\n"
-        "如果你无法根据【上下文】回答，请直接告知用户你不知道，不要编造答案。\n\n"
+        f"如果你无法根据【上下文】回答，只能回复“{_QA_FALLBACK}”，不要补充解释，不要编造答案。\n\n"
         f"【上下文】：\n{context}"
     )
 
@@ -66,13 +92,8 @@ async def call_ai_api(question: str, context: str) -> str:
             if not choices:
                 return _QA_FALLBACK
             
-            content = choices[0].get("message", {}).get("content", "").strip()
-            if not content:
-                return _QA_FALLBACK
-            lowered = content.replace(" ", "")
-            if len(lowered) <= 80 and any(k in lowered for k in ["不知道", "无法回答", "无法解答", "暂无法", "不清楚", "无法根据"]):
-                return _QA_FALLBACK
-            return content
+            content = choices[0].get("message", {}).get("content", "")
+            return _normalize_answer(content)
 
     except httpx.HTTPError as e:
         return _QA_FALLBACK
