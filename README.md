@@ -103,12 +103,6 @@ Example:
 python scripts/import_scores.py data/scores.xlsx --replace
 ```
 
-If there is only one `.xlsx` file under `data/`, you can omit the path:
-
-```bash
-python scripts/import_scores.py --replace
-```
-
 Use `--replace` when the Excel file should become the full score table. Without `--replace`, matching records with the same `student_id + name + id_card_suffix + course` are updated and other records are kept.
 
 ## Run
