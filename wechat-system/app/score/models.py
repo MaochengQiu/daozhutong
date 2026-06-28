@@ -9,6 +9,6 @@ class ScoreRecord(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     student_id = Column(String(32), index=True)
     name = Column(String(64), index=True)
-    id_card_suffix = Column(String(6), index=True)
+    id_card_suffix = Column(String(4), index=True)
     course = Column(String(64))
     score = Column(Float)

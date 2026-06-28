@@ -20,7 +20,7 @@ def _ensure_score_schema():
     columns = {column["name"] for column in inspector.get_columns(ScoreRecord.__tablename__)}
     if "id_card_suffix" not in columns:
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE score_records ADD COLUMN id_card_suffix VARCHAR(6)"))
+            conn.execute(text("ALTER TABLE score_records ADD COLUMN id_card_suffix VARCHAR(4)"))
 
 
 def _seed_score_records(session):
@@ -28,10 +28,10 @@ def _seed_score_records(session):
     if existing == 0:
         session.add_all(
             [
-                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="000001", course="数学", score=92),
-                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="000001", course="英语", score=88),
-                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="000002", course="数学", score=79),
-                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="000002", course="英语", score=85),
+                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="0001", course="数学", score=92),
+                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="0001", course="英语", score=88),
+                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="0002", course="数学", score=79),
+                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="0002", course="英语", score=85),
             ]
         )
         session.commit()
@@ -40,11 +40,11 @@ def _seed_score_records(session):
     session.query(ScoreRecord).filter(
         ScoreRecord.name == "张三",
         ScoreRecord.id_card_suffix.is_(None),
-    ).update({"id_card_suffix": "000001"}, synchronize_session=False)
+    ).update({"id_card_suffix": "0001"}, synchronize_session=False)
     session.query(ScoreRecord).filter(
         ScoreRecord.name == "李四",
         ScoreRecord.id_card_suffix.is_(None),
-    ).update({"id_card_suffix": "000002"}, synchronize_session=False)
+    ).update({"id_card_suffix": "0002"}, synchronize_session=False)
     session.commit()
 
 

@@ -49,6 +49,21 @@ def _normalize_answer(content: str) -> str:
     return content
 
 
+def _build_system_prompt(context: str) -> str:
+    return (
+        "你是一个温和、耐心、靠谱的校园助手。请基于提供的【上下文】回答用户提出的【问题】。\n"
+        "回答时不要只是照抄原文中的一句话，而要先理解用户当前提问的处境，再把资料里的信息整理成自然、有人情味、可执行的回复。\n"
+        "请遵守这些要求：\n"
+        "1. 必须以【上下文】为事实依据，不能编造政策、时间、地点、流程、联系方式、成绩或承诺。\n"
+        "2. 可以根据用户问题做合理的语气转换和结构化表达，比如先给结论，再补充办理步骤、注意事项、可能原因和下一步建议。\n"
+        "3. 如果用户像家长或学生在表达焦虑，可以适度安抚，但不要夸大保证，也不要替学校作未在资料中出现的承诺。\n"
+        "4. 如果【上下文】里只有部分依据，就只回答能确认的部分，并提醒用户联系老师或管理员核实其余内容。\n"
+        "5. 如果你无法根据【上下文】回答，只能回复"
+        f"“{_QA_FALLBACK}”，不要补充解释，不要编造答案。\n\n"
+        f"【上下文】：\n{context}"
+    )
+
+
 async def call_ai_api(question: str, context: str) -> str:
     """
     调用 AI 接口进行问答。
@@ -63,11 +78,7 @@ async def call_ai_api(question: str, context: str) -> str:
         "Content-Type": "application/json",
     }
 
-    system_prompt = (
-        "你是一个校园助手。请基于提供的【上下文】回答用户提出的【问题】。\n"
-        f"如果你无法根据【上下文】回答，只能回复“{_QA_FALLBACK}”，不要补充解释，不要编造答案。\n\n"
-        f"【上下文】：\n{context}"
-    )
+    system_prompt = _build_system_prompt(context)
 
     payload = {
         "model": settings.ai_chat_model,
@@ -75,7 +86,7 @@ async def call_ai_api(question: str, context: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question},
         ],
-        "temperature": 0.3,
+        "temperature": 0.45,
     }
 
     try:

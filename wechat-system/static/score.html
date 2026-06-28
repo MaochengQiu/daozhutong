@@ -277,7 +277,7 @@
       <a class="brand" href="/static/home.html">微信助手</a>
       <nav class="nav" aria-label="导航">
         <a href="/static/home.html">首页</a>
-        <a href="/static/score.html?v=20260509-idcard" aria-current="page">成绩查询</a>
+        <a href="/static/score.html?v=20260628-idcard4" aria-current="page">成绩查询</a>
         <a href="/static/chat.html">智能问答</a>
       </nav>
     </div>
@@ -294,7 +294,7 @@
       <div class="card">
         <header>
           <h1>成绩查询</h1>
-          <div class="subtitle">填写姓名、学号与身份证后6位，系统会核验身份后展示个人课程成绩。</div>
+          <div class="subtitle">填写姓名、学号与身份证后4位，系统会核验身份后展示个人课程成绩。</div>
         </header>
 
         <form id="queryForm" autocomplete="off">
@@ -310,9 +310,9 @@
               <div id="studentIdError" class="field-error" role="alert">输入格式错误，请重新输入</div>
             </div>
             <div class="field">
-              <label for="idCardSuffix">身份证后6位</label>
-              <input id="idCardSuffix" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="例如：000001" required />
-              <div id="idCardSuffixError" class="field-error" role="alert">请输入身份证后6位数字</div>
+              <label for="idCardSuffix">身份证后4位</label>
+              <input id="idCardSuffix" maxlength="4" inputmode="text" pattern="[0-9Xx]{4}" placeholder="例如：8230" required />
+              <div id="idCardSuffixError" class="field-error" role="alert">请输入身份证后4位</div>
             </div>
           </div>
 
@@ -323,7 +323,7 @@
         </form>
 
         <div id="result" aria-live="polite"></div>
-        <div class="footer">如查询不到成绩，请核对姓名、学号与身份证后6位是否一致</div>
+        <div class="footer">如查询不到成绩，请核对姓名、学号与身份证后4位是否一致</div>
       </div>
     </div>
   </main>
@@ -338,9 +338,9 @@
     const nameErrorEl = document.getElementById("nameError");
     const studentIdErrorEl = document.getElementById("studentIdError");
     const idCardSuffixErrorEl = document.getElementById("idCardSuffixError");
-    const NAME_RE = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+$/;
+    const NAME_RE = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff·]+$/;
     const STUDENT_ID_RE = /^\d{2,11}$/;
-    const ID_CARD_SUFFIX_RE = /^\d{6}$/;
+    const ID_CARD_SUFFIX_RE = /^[0-9X]{4}$/;
     let nameComposing = false;
 
     function setStatus(message, type) {
@@ -388,7 +388,7 @@
 
     function sanitizeNameInput() {
       const raw = nameEl.value;
-      const cleaned = raw.replace(/[^\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g, "");
+      const cleaned = raw.replace(/[^\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff·]/g, "");
       if (raw !== cleaned) nameEl.value = cleaned;
       const show = nameEl.value.length > 0 && !NAME_RE.test(nameEl.value);
       setInvalid(nameEl, show);
@@ -406,7 +406,7 @@
 
     function sanitizeIdCardSuffixInput() {
       const raw = idCardSuffixEl.value;
-      const cleaned = raw.replace(/\D/g, "").slice(0, 6);
+      const cleaned = raw.toUpperCase().replace(/[^0-9X]/g, "").slice(0, 4);
       if (raw !== cleaned) idCardSuffixEl.value = cleaned;
       const show = idCardSuffixEl.value.length > 0 && !ID_CARD_SUFFIX_RE.test(idCardSuffixEl.value);
       setInvalid(idCardSuffixEl, show);
@@ -422,7 +422,7 @@
     }
 
     function normalizeIdCardSuffix(raw) {
-      return raw.trim();
+      return raw.trim().toUpperCase();
     }
 
     function validateInputs() {
@@ -437,7 +437,7 @@
       setFieldError(idCardSuffixErrorEl, false);
 
       if (!name || !studentId || !idCardSuffix) {
-        setStatus("请填写姓名、学号与身份证后6位后再查询。", "error");
+        setStatus("请填写姓名、学号与身份证后4位后再查询。", "error");
         if (!name) {
           setInvalid(nameEl, true);
           setFieldError(nameErrorEl, true);
@@ -467,7 +467,7 @@
       if (!ID_CARD_SUFFIX_RE.test(idCardSuffix)) {
         setInvalid(idCardSuffixEl, true);
         setFieldError(idCardSuffixErrorEl, true);
-        setStatus("身份证后6位必须为6位数字。", "error");
+        setStatus("身份证后4位必须为4位数字或X。", "error");
         return null;
       }
       return { name, studentId, idCardSuffix };
