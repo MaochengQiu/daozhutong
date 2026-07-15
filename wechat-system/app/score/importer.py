@@ -18,12 +18,23 @@ _ID_CARD_SUFFIX_LENGTH = 4
 _IDENTITY_FIELDS = {"student_id", "name", "id_card_suffix"}
 _LONG_FORMAT_FIELDS = _IDENTITY_FIELDS | {"course", "score"}
 _NON_SCORE_HEADERS = {
+    "序号",
+    "学号",
+    "姓名",
     "性别",
     "民族",
     "生源地",
     "书院班级",
     "行政班",
     "班级",
+    "名次",
+    "排名",
+    "总成绩排名",
+    "学分特殊加权平均成绩",
+    "加权平均成绩",
+    "课程名称",
+    "课程号",
+    "学分",
     "入学年月",
     "房间号",
     "宿舍",
@@ -33,6 +44,7 @@ _NON_SCORE_HEADERS = {
 _HEADER_ALIASES = {
     "student_id": ["student_id", "studentid", "学号", "学生学号", "学生编号", "考号"],
     "name": ["name", "姓名", "学生姓名"],
+    "class_name": ["class_name", "classname", "class", "班级", "行政班", "书院班级"],
     "id_card_suffix": [
         "id_card_suffix",
         "idcardsuffix",
@@ -50,7 +62,20 @@ _HEADER_ALIASES = {
         "身份证号码",
         "证件号",
     ],
+    "total_rank": ["total_rank", "totalrank", "rank", "ranking", "名次", "排名", "总成绩排名", "总排名"],
+    "weighted_average_score": [
+        "weighted_average_score",
+        "weightedaveragescore",
+        "weightedaverage",
+        "加权平均成绩",
+        "学分特殊加权平均成绩",
+        "加权平均",
+        "平均成绩",
+        "总成绩",
+    ],
     "course": ["course", "课程", "课程名称", "课程名", "科目", "考试科目"],
+    "course_code": ["course_code", "coursecode", "课程号", "课程代码", "课程编号"],
+    "credit": ["credit", "credits", "学分"],
     "score": ["score", "成绩", "分数", "得分"],
 }
 
@@ -61,6 +86,8 @@ def _normalize_header(value: Any) -> str:
         .strip()
         .lower()
         .replace(" ", "")
+        .replace("\n", "")
+        .replace("\r", "")
         .replace("_", "")
         .replace("-", "")
         .replace("：", "")
@@ -105,6 +132,13 @@ def _score_to_float(value: Any) -> Optional[float]:
         return float(text)
     except ValueError:
         return None
+
+
+def _value_to_int(value: Any) -> Optional[int]:
+    score = _score_to_float(value)
+    if score is None:
+        return None
+    return int(score)
 
 
 def _header_map(row: tuple[Any, ...]) -> Dict[int, str]:
@@ -158,7 +192,12 @@ def _record_from_row(row: tuple[Any, ...], mapping: Dict[int, str]) -> Optional[
     student_id = _cell_to_text(values.get("student_id"))
     name = _cell_to_text(values.get("name"))
     id_card_suffix = _id_card_suffix(values.get("id_card_suffix"))
+    class_name = _cell_to_text(values.get("class_name"))
+    total_rank = _value_to_int(values.get("total_rank"))
+    weighted_average_score = _score_to_float(values.get("weighted_average_score"))
     course = _cell_to_text(values.get("course"))
+    course_code = _cell_to_text(values.get("course_code"))
+    credit = _score_to_float(values.get("credit"))
     score = _score_to_float(values.get("score"))
 
     if not student_id or not name or len(id_card_suffix) != _ID_CARD_SUFFIX_LENGTH or not course or score is None:
@@ -168,7 +207,12 @@ def _record_from_row(row: tuple[Any, ...], mapping: Dict[int, str]) -> Optional[
         student_id=student_id,
         name=name,
         id_card_suffix=id_card_suffix,
+        class_name=class_name,
+        total_rank=total_rank,
+        weighted_average_score=weighted_average_score,
         course=course,
+        course_code=course_code,
+        credit=credit,
         score=score,
     )
 
@@ -186,11 +230,14 @@ def _records_from_wide_row(
     student_id = _cell_to_text(values.get("student_id"))
     name = _cell_to_text(values.get("name"))
     id_card_suffix = _id_card_suffix(values.get("id_card_suffix"))
+    class_name = _cell_to_text(values.get("class_name"))
+    total_rank = _value_to_int(values.get("total_rank"))
+    weighted_average_score = _score_to_float(values.get("weighted_average_score"))
     if not student_id or not name or len(id_card_suffix) != _ID_CARD_SUFFIX_LENGTH:
         return []
 
     records: List[ScoreRecord] = []
-    for index, course in score_columns.items():
+    for course_order, (index, course) in enumerate(score_columns.items(), start=1):
         score = _score_to_float(row[index] if index < len(row) else None)
         if score is None:
             continue
@@ -199,11 +246,181 @@ def _records_from_wide_row(
                 student_id=student_id,
                 name=name,
                 id_card_suffix=id_card_suffix,
+                class_name=class_name,
+                total_rank=total_rank,
+                weighted_average_score=weighted_average_score,
                 course=course,
+                course_order=course_order,
                 score=score,
             )
         )
     return records
+
+
+def _maybe_reset_dimensions(sheet: Any) -> None:
+    reset_dimensions = getattr(sheet, "reset_dimensions", None)
+    if callable(reset_dimensions):
+        reset_dimensions()
+
+
+def _summary_course_columns(
+    header_row: tuple[Any, ...],
+    code_row: tuple[Any, ...],
+    credit_row: tuple[Any, ...],
+) -> Optional[List[Dict[str, Any]]]:
+    course_label_index: Optional[int] = None
+    for index, value in enumerate(header_row):
+        if _normalize_header(value) not in {"course", "coursename", "课程", "课程名称"}:
+            continue
+        if _normalize_header(code_row[index] if index < len(code_row) else "") == _normalize_header("课程号"):
+            course_label_index = index
+            break
+
+    if course_label_index is None:
+        return None
+
+    columns: List[Dict[str, Any]] = []
+    for index in range(course_label_index + 1, len(header_row)):
+        course = _cell_to_text(header_row[index])
+        if not course:
+            continue
+        columns.append(
+            {
+                "index": index,
+                "course": course,
+                "course_code": _cell_to_text(code_row[index] if index < len(code_row) else ""),
+                "credit": _score_to_float(credit_row[index] if index < len(credit_row) else None),
+                "course_order": len(columns) + 1,
+            }
+        )
+    return columns or None
+
+
+def _calculated_weighted_average(row: tuple[Any, ...], course_columns: List[Dict[str, Any]]) -> Optional[float]:
+    weighted_sum = 0.0
+    credit_sum = 0.0
+    for column in course_columns:
+        credit = column.get("credit")
+        if credit is None or credit <= 0:
+            continue
+        index = column["index"]
+        score = _score_to_float(row[index] if index < len(row) else None)
+        if score is None:
+            continue
+        weighted_sum += score * credit
+        credit_sum += credit
+    if credit_sum == 0:
+        return None
+    return round(weighted_sum / credit_sum, 1)
+
+
+def _records_from_summary_score_sheet(sheet: Any) -> Optional[tuple[List[ScoreRecord], int]]:
+    rows = sheet.iter_rows(values_only=True)
+    header_row = next(rows, None)
+    code_row = next(rows, None)
+    credit_row = next(rows, None)
+    if header_row is None or code_row is None or credit_row is None:
+        return None
+
+    mapping = _header_map(header_row)
+    fields = set(mapping.values())
+    if not {"student_id", "name"}.issubset(fields):
+        return None
+
+    course_columns = _summary_course_columns(header_row, code_row, credit_row)
+    if course_columns is None:
+        return None
+
+    records: List[ScoreRecord] = []
+    skipped = 0
+    for row in rows:
+        values = {
+            field: row[index] if index < len(row) else None
+            for index, field in mapping.items()
+        }
+        student_id = _cell_to_text(values.get("student_id"))
+        name = _cell_to_text(values.get("name"))
+        if not student_id or not name:
+            if any(value not in (None, "") for value in row):
+                skipped += 1
+            continue
+
+        id_card_suffix = _id_card_suffix(values.get("id_card_suffix"))
+        class_name = _cell_to_text(values.get("class_name"))
+        total_rank = _value_to_int(values.get("total_rank"))
+        weighted_average_score = _score_to_float(values.get("weighted_average_score"))
+        if weighted_average_score is None:
+            weighted_average_score = _calculated_weighted_average(row, course_columns)
+
+        row_records: List[ScoreRecord] = []
+        for column in course_columns:
+            index = column["index"]
+            score = _score_to_float(row[index] if index < len(row) else None)
+            if score is None:
+                continue
+            row_records.append(
+                ScoreRecord(
+                    student_id=student_id,
+                    name=name,
+                    id_card_suffix=id_card_suffix,
+                    class_name=class_name,
+                    total_rank=total_rank,
+                    weighted_average_score=weighted_average_score,
+                    course=column["course"],
+                    course_code=column["course_code"],
+                    credit=column["credit"],
+                    course_order=column["course_order"],
+                    score=score,
+                )
+            )
+
+        if row_records:
+            records.extend(row_records)
+        elif any(value not in (None, "") for value in row):
+            skipped += 1
+
+    return records, skipped
+
+
+def load_identity_suffixes_from_xlsx(xlsx_path: str) -> Dict[tuple[str, str], str]:
+    try:
+        from openpyxl import load_workbook
+    except ImportError as exc:
+        raise RuntimeError("openpyxl 未安装，无法导入身份信息表") from exc
+
+    path = Path(xlsx_path)
+    if not path.exists():
+        raise FileNotFoundError(f"身份信息表不存在: {path}")
+
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    suffixes: Dict[tuple[str, str], str] = {}
+
+    try:
+        for sheet in workbook.worksheets:
+            _maybe_reset_dimensions(sheet)
+            mapping: Optional[Dict[int, str]] = None
+            for row_index, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+                if mapping is None:
+                    candidate = _header_map(row)
+                    if {"student_id", "name", "id_card_suffix"}.issubset(set(candidate.values())):
+                        mapping = candidate
+                    elif row_index >= 20:
+                        break
+                    continue
+
+                values = {
+                    field: row[index] if index < len(row) else None
+                    for index, field in mapping.items()
+                }
+                student_id = _cell_to_text(values.get("student_id"))
+                name = _cell_to_text(values.get("name"))
+                id_card_suffix = _id_card_suffix(values.get("id_card_suffix"))
+                if student_id and name and len(id_card_suffix) == _ID_CARD_SUFFIX_LENGTH:
+                    suffixes[(student_id, name)] = id_card_suffix
+    finally:
+        workbook.close()
+
+    return suffixes
 
 
 def load_score_records_from_xlsx(xlsx_path: str) -> tuple[List[ScoreRecord], int, int]:
@@ -224,6 +441,14 @@ def load_score_records_from_xlsx(xlsx_path: str) -> tuple[List[ScoreRecord], int
 
     try:
         for sheet in workbook.worksheets:
+            _maybe_reset_dimensions(sheet)
+            summary_records = _records_from_summary_score_sheet(sheet)
+            if summary_records is not None:
+                sheet_records, sheet_skipped = summary_records
+                records.extend(sheet_records)
+                skipped += sheet_skipped
+                continue
+
             mapping: Optional[Dict[int, str]] = None
             score_columns: Dict[int, str] = {}
             is_wide_format = False
@@ -258,17 +483,37 @@ def load_score_records_from_xlsx(xlsx_path: str) -> tuple[List[ScoreRecord], int
     return records, skipped, len(workbook.worksheets)
 
 
-def import_scores_from_xlsx(db: Session, xlsx_path: str, replace: bool = False) -> ScoreImportResult:
+def import_scores_from_xlsx(
+    db: Session,
+    xlsx_path: str,
+    replace: bool = False,
+    identity_xlsx_path: str | None = None,
+) -> ScoreImportResult:
     records, skipped, sheets = load_score_records_from_xlsx(xlsx_path)
+
+    suffix_lookup: Dict[tuple[str, str], str] = {}
+    if identity_xlsx_path:
+        suffix_lookup.update(load_identity_suffixes_from_xlsx(identity_xlsx_path))
+
+    for student_id, name, id_card_suffix in db.query(
+        ScoreRecord.student_id,
+        ScoreRecord.name,
+        ScoreRecord.id_card_suffix,
+    ).distinct():
+        suffix = _id_card_suffix(id_card_suffix)
+        if student_id and name and len(suffix) == _ID_CARD_SUFFIX_LENGTH:
+            suffix_lookup.setdefault((student_id.strip(), name.strip()), suffix)
 
     if replace:
         db.query(ScoreRecord).delete()
 
     for record in records:
+        if len(_cell_to_text(record.id_card_suffix)) != _ID_CARD_SUFFIX_LENGTH:
+            record.id_card_suffix = suffix_lookup.get((record.student_id, record.name), "")
+
         db.query(ScoreRecord).filter(
             ScoreRecord.student_id == record.student_id,
             ScoreRecord.name == record.name,
-            ScoreRecord.id_card_suffix == record.id_card_suffix,
             ScoreRecord.course == record.course,
         ).delete(synchronize_session=False)
         db.add(record)

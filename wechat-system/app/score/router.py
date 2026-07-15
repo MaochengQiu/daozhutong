@@ -14,6 +14,7 @@ from app.score.service import ScoreService
 router = APIRouter(prefix="/api/score")
 settings = get_settings()
 _rate_window: Dict[str, Deque[float]] = defaultdict(deque)
+INPUT_MISMATCH_MESSAGE = "输入信息有误，请重新输入"
 
 
 class ScoreQueryRequest(BaseModel):
@@ -55,12 +56,18 @@ def query_score(payload: ScoreQueryRequest, request: Request, db: Session = Depe
 
     records = ScoreService.query_personal_scores(db, payload.student_id, payload.name, payload.id_card_suffix)
     if not records:
-        return {"ok": False, "message": "未查询到成绩，请核对姓名、学号和身份证后4位"}
+        return {"ok": False, "message": INPUT_MISMATCH_MESSAGE}
 
     return {
         "ok": True,
+        "summary": ScoreService.build_summary(records),
         "data": [
-            {"course": r.course, "score": r.score}
+            {
+                "course": r.course,
+                "course_code": r.course_code,
+                "credit": r.credit,
+                "score": r.score,
+            }
             for r in records
         ],
     }

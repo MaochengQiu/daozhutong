@@ -2,25 +2,18 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-from sqlalchemy import inspect, text
 
 from app.config import BASE_DIR, get_settings
 from app.database import Base, SessionLocal, engine
 from app.qa.router import router as qa_router
 from app.score.router import router as score_router
 from app.score.models import ScoreRecord
+from app.score.schema import ensure_score_schema
 from app.wechat.handler import router as wechat_router
 
 
 def _ensure_score_schema():
-    inspector = inspect(engine)
-    if not inspector.has_table(ScoreRecord.__tablename__):
-        return
-
-    columns = {column["name"] for column in inspector.get_columns(ScoreRecord.__tablename__)}
-    if "id_card_suffix" not in columns:
-        with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE score_records ADD COLUMN id_card_suffix VARCHAR(4)"))
+    ensure_score_schema(engine)
 
 
 def _seed_score_records(session):
@@ -28,10 +21,54 @@ def _seed_score_records(session):
     if existing == 0:
         session.add_all(
             [
-                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="0001", course="数学", score=92),
-                ScoreRecord(student_id="2026001", name="张三", id_card_suffix="0001", course="英语", score=88),
-                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="0002", course="数学", score=79),
-                ScoreRecord(student_id="2026002", name="李四", id_card_suffix="0002", course="英语", score=85),
+                ScoreRecord(
+                    student_id="2026001",
+                    name="张三",
+                    id_card_suffix="0001",
+                    class_name="示例班",
+                    total_rank=1,
+                    weighted_average_score=90,
+                    course="数学",
+                    credit=3,
+                    course_order=1,
+                    score=92,
+                ),
+                ScoreRecord(
+                    student_id="2026001",
+                    name="张三",
+                    id_card_suffix="0001",
+                    class_name="示例班",
+                    total_rank=1,
+                    weighted_average_score=90,
+                    course="英语",
+                    credit=2,
+                    course_order=2,
+                    score=88,
+                ),
+                ScoreRecord(
+                    student_id="2026002",
+                    name="李四",
+                    id_card_suffix="0002",
+                    class_name="示例班",
+                    total_rank=2,
+                    weighted_average_score=81.4,
+                    course="数学",
+                    credit=3,
+                    course_order=1,
+                    score=79,
+                ),
+                ScoreRecord(
+                    student_id="2026002",
+                    name="李四",
+                    id_card_suffix="0002",
+                    class_name="示例班",
+                    total_rank=2,
+                    weighted_average_score=81.4,
+                    course="英语",
+                    credit=2,
+                    course_order=2,
+                    score=85,
+                ),
             ]
         )
         session.commit()

@@ -175,7 +175,77 @@
       visibility: hidden;
     }
     .field-error.show { visibility: visible; }
-    #result { margin-top: 20px; display: grid; gap: 12px; }
+    #result { margin-top: 24px; display: grid; gap: 18px; }
+    .result-overview {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      overflow: hidden;
+      border: 1px solid rgba(3, 105, 161, 0.2);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(224, 242, 254, 0.76), rgba(255, 255, 255, 0.94) 52%),
+        #fff;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    }
+    .result-overview::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #c58b45);
+    }
+    .result-metric {
+      min-width: 0;
+      padding: 22px 24px 20px;
+    }
+    .result-metric + .result-metric {
+      border-left: 1px solid rgba(3, 105, 161, 0.14);
+    }
+    .result-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+    .result-value {
+      margin-top: 10px;
+      color: #0f172a;
+      font-size: clamp(30px, 7vw, 42px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      word-break: break-word;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-unit {
+      margin-left: 4px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: var(--muted);
+    }
+    .subject-section {
+      display: grid;
+      gap: 10px;
+    }
+    .subject-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .subject-heading h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.3;
+      color: #0f172a;
+    }
+    .subject-count {
+      flex: none;
+      font-size: 12px;
+      color: var(--muted);
+    }
     .status {
       padding: 13px 14px;
       border-radius: 12px;
@@ -206,7 +276,6 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 360px;
       background: #fff;
     }
     thead th {
@@ -218,14 +287,20 @@
       background: var(--soft);
       border-bottom: 1px solid var(--border);
     }
+    thead th:last-child,
+    tbody td:last-child {
+      width: 30%;
+      text-align: right;
+    }
     tbody td {
-      padding: 11px 12px;
+      padding: 13px 14px;
       border-bottom: 1px solid var(--border);
       font-size: 14px;
     }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: #f8fafc; }
-    .score { font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+      tbody tr:last-child td { border-bottom: none; }
+      tbody tr:hover td { background: #f8fafc; }
+    .course-name { font-weight: 600; color: #334155; }
+    .score { font-variant-numeric: tabular-nums; font-weight: 800; color: #0f172a; }
     .footer { margin-top: 14px; text-align: center; font-size: 12px; color: var(--muted); }
 
     @media (min-width: 720px) {
@@ -254,6 +329,16 @@
       .card {
         padding: 20px 16px;
         border-radius: 14px;
+      }
+      .result-overview {
+        grid-template-columns: 1fr;
+      }
+      .result-metric {
+        padding: 18px 20px;
+      }
+      .result-metric + .result-metric {
+        border-top: 1px solid rgba(3, 105, 161, 0.14);
+        border-left: 0;
       }
       h1 { font-size: 22px; }
     }
@@ -361,20 +446,53 @@
         .replace(/'/g, "&#039;");
     }
 
-    function renderTable(records) {
+    function displayValue(value) {
+      if (value === null || value === undefined || value === "") return "-";
+      return escapeHtml(value);
+    }
+
+    function displayMetric(value, unit) {
+      if (value === null || value === undefined || value === "") return "-";
+      return `${escapeHtml(value)}<span class="result-unit">${unit}</span>`;
+    }
+
+    function renderTable(records, summary) {
+      const totalScore = summary?.total_score ?? summary?.weighted_average_score;
+      const totalRank = summary?.total_rank;
       const rows = records
-        .map((r) => `<tr><td>${escapeHtml(r.course)}</td><td class="score">${escapeHtml(r.score)}</td></tr>`)
+        .map((r) => `
+          <tr>
+            <td class="course-name">${displayValue(r.course)}</td>
+            <td class="score">${displayValue(r.score)}</td>
+          </tr>
+        `)
         .join("");
       resultEl.innerHTML = `
-        <div class="status success">查询成功，以下为本人成绩。</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>课程</th><th>成绩</th></tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
+        <div class="result-overview" aria-label="成绩汇总">
+          <div class="result-metric">
+            <div class="result-label">总成绩</div>
+            <div class="result-value">${displayMetric(totalScore, "分")}</div>
+          </div>
+          <div class="result-metric">
+            <div class="result-label">排名</div>
+            <div class="result-value">${displayMetric(totalRank, "名")}</div>
+          </div>
         </div>
+        <div class="subject-section">
+          <div class="subject-heading">
+            <h2>各学科成绩</h2>
+            <span class="subject-count">共 ${records.length} 门</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>学科名称</th><th>成绩</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="sr-only" role="status">查询成功，已展示总成绩、排名和各学科成绩。</div>
       `;
     }
 
@@ -494,14 +612,14 @@
           return;
         }
         if (!data.ok) {
-          setStatus(data.message || "未查询到成绩。", "error");
+          setStatus(data.message || "输入信息有误，请重新输入", "error");
           return;
         }
         if (!Array.isArray(data.data) || data.data.length === 0) {
-          setStatus("未查询到成绩。", "error");
+          setStatus("输入信息有误，请重新输入", "error");
           return;
         }
-        renderTable(data.data);
+        renderTable(data.data, data.summary);
       } catch (e) {
         setStatus("网络异常或服务不可用，请稍后重试。", "error");
       } finally {

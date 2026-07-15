@@ -220,9 +220,26 @@ Response:
 ```json
 {
   "ok": true,
+  "summary": {
+    "student_id": "25049200079",
+    "name": "李昭璇",
+    "class_name": "25机电1班",
+    "weighted_average_score": 79.3,
+    "total_rank": 255
+  },
   "data": [
-    { "course": "数学", "score": 92 },
-    { "course": "英语", "score": 88 }
+    {
+      "course": "新生研讨与学科导论(Ⅱ)",
+      "course_code": "24TS0006-04",
+      "credit": 0.5,
+      "score": 80
+    },
+    {
+      "course": "图学基础与计算机绘图",
+      "course_code": "24ME2000",
+      "credit": 2,
+      "score": 76
+    }
   ]
 }
 ```
@@ -247,16 +264,23 @@ Response:
 | `student_id` | 学号, studentid, 考号 |
 | `name` | 姓名, 学生姓名 |
 | `id_card_suffix` | 身份证后4位, 身份证号, 证件号 |
+| `class_name` | 班级, 行政班, 书院班级 |
+| `total_rank` | 名次, 排名, 总成绩排名 |
+| `weighted_average_score` | 加权平均成绩, 学分特殊加权平均成绩, 平均成绩, 总成绩 |
 | `course` | 课程, 科目, 考试科目 |
+| `course_code` | 课程号, 课程代码, 课程编号 |
+| `credit` | 学分 |
 | `score` | 成绩, 分数, 得分 |
 
 ```bash
 # 全量替换（清空后导入）
-python scripts/import_scores.py data/scores.xlsx --replace
+python scripts/import_scores.py data/scores.xlsx --identity-xlsx "data/20250822 新生基本信息.xlsx" --replace
 
-# 增量更新（匹配 student_id + name + id_card_suffix + course 则更新）
+# 增量更新（匹配 student_id + name + course 则更新）
 python scripts/import_scores.py data/scores.xlsx
 ```
+
+导入器也支持成绩汇总宽表：第 1 行为课程名称，第 2 行为课程号，第 3 行为学分，第 4 行起为学生成绩；会写入加权平均成绩、总成绩排名和每个单项成绩。
 
 ---
 
