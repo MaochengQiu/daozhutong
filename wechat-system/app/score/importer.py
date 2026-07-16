@@ -315,24 +315,6 @@ def _summary_course_columns(
     return columns or None
 
 
-def _calculated_weighted_average(row: tuple[Any, ...], course_columns: List[Dict[str, Any]]) -> Optional[float]:
-    weighted_sum = 0.0
-    credit_sum = 0.0
-    for column in course_columns:
-        credit = column.get("credit")
-        if credit is None or credit <= 0:
-            continue
-        index = column["index"]
-        score = _score_to_float(row[index] if index < len(row) else None)
-        if score is None:
-            continue
-        weighted_sum += score * credit
-        credit_sum += credit
-    if credit_sum == 0:
-        return None
-    return round(weighted_sum / credit_sum, 1)
-
-
 def _records_from_summary_score_sheet(sheet: Any) -> Optional[tuple[List[ScoreRecord], int]]:
     rows = sheet.iter_rows(values_only=True)
     header_row = next(rows, None)
@@ -368,8 +350,6 @@ def _records_from_summary_score_sheet(sheet: Any) -> Optional[tuple[List[ScoreRe
         class_name = _cell_to_text(values.get("class_name"))
         total_rank = _value_to_int(values.get("total_rank"))
         weighted_average_score = _score_to_float(values.get("weighted_average_score"))
-        if weighted_average_score is None:
-            weighted_average_score = _calculated_weighted_average(row, course_columns)
 
         row_records: List[ScoreRecord] = []
         for column in course_columns:
