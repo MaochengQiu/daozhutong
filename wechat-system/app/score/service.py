@@ -23,10 +23,18 @@ class ScoreService:
         if not records:
             return None
         first = records[0]
+
+        def first_non_null(attr: str) -> Any:
+            for record in records:
+                value = getattr(record, attr)
+                if value is not None:
+                    return value
+            return None
+
         return {
             "student_id": first.student_id,
             "name": first.name,
-            "class_name": first.class_name,
-            "weighted_average_score": first.weighted_average_score,
-            "total_rank": first.total_rank,
+            "class_name": first_non_null("class_name"),
+            "weighted_average_score": first_non_null("weighted_average_score"),
+            "total_rank": first_non_null("total_rank"),
         }
